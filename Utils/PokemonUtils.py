@@ -13,11 +13,17 @@ PokemonUtils
 
 DATA:
 -----
+* utils.generateXYSplitsV1()
+Make x_train, x_val, and x_test from first frame of every gifs
+Returns (x_train, x_val, x_test, y_train, y_val, y_test)
+  X Shapes: (N, H, W, C)
+  Y Shapes: (N,)
+
 * utils.x_train_inds, .x_val_inds, .x_test_inds
-(N,) arrays of training indices (USE THESE MOSTLY)
+(N,) arrays of training indices
 
 * utils.x_train_pokedex, .x_val_pokedex, .x_test_pokedex
-(N,) arrays of pokedex numbers (HELPFUL FOR SOME APPLICATIONS)
+(N,) arrays of pokedex numbers
 
 * .y_train, .y_val, .y_test
 (N,) arrays of type numbers (1 = Normal, ..., 18 = Fairy)
@@ -25,6 +31,10 @@ DATA:
 
 GIF MANIPULATION:
 -----------------
+* utils.loadAllGIFs(verbose=True)
+Loads all relevant GIFs into RAM.
+Takes ~5 minutes!
+
 * utils.readGif(path)
 gif path name --> numpy array (T, H, W, C)
 
@@ -52,16 +62,26 @@ List of names of all pokemon we will be using
 
 class PokemonUtils():
 
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=True, utils=None):
         self.csv_path = "../Data/veekun/"
         self.gifs_path = "../Data/pkparaiso/"
         self.splits_path = "../Data/Splits/"
+        self.all_gifs = []
         self.verbose = verbose
+
         self.generateNameToNumber()  # loads all names/numbers from veekun file
         self.generateMissingImages(self.gifs_path)  # cross-references with downloaded images
         self.generateNumberToTypes()  # Only for pokemon that have associated images
         self.generateTypeNames()  # Only for pokemon that have associated images
         self.generateTrainValTestSplit()  # Load from file
+
+        if not utils is None:
+            self.all_gifs = utils.all_gifs
+            print("loaded previous", len(self.all_gifs), "datapoints")
+            self.calculateGIFSizeExtremes()
+            self.data_loaded = True
+        else:
+            self.data_loaded = False
 
     def generateNameToNumber(self):
         self.nameToNumberDict = {}
@@ -256,6 +276,77 @@ class PokemonUtils():
         img = Image.open(folder + name + ".gif")
         gif = np.array([np.array(frame.copy().convert(format).getdata(),dtype=np.uint8).reshape(frame.size[1],frame.size[0],channels) for frame in ImageSequence.Iterator(img)])
         return gif
+
+    # Collect list of all gifs (takes ~5 minutes)
+    def loadAllGIFs(self):
+        self.all_gifs = []
+        count = 1;
+        for name in self.uniqueValidPokemonNames:
+            gif = self.readGif(name)
+            self.all_gifs.append(gif)
+            if self.verbose and count % 25 == 0:
+                print(count, "done!")
+            count += 1
+        print("all", count-1, "done!")
+        self.calculateGIFSizeExtremes()
+        self.data_loaded = True
+
+    def calculateGIFSizeExtremes(self):
+        # Find distribution of data sizes
+        self.smallest_image_size = np.array([999,999,999,999])
+        self.largest_image_size  = np.array([-1,-1,-1,-1])
+        for i in range(len(self.all_gifs)):
+            gif = self.all_gifs[i]
+            cur = np.array([gif.shape[0], gif.shape[1], gif.shape[2], gif.shape[3]])
+            if (gif.shape[0] <= 1):
+                print(self.numberToName(self.uniqueValidIDs[i]), "had only 1 frame")
+                continue
+            self.smallest_image_size = np.minimum(cur, self.smallest_image_size)
+            self.largest_image_size  = np.maximum(cur, self.largest_image_size)
+        print("smallest:", self.smallest_image_size)
+        print("largest:", self.largest_image_size)
+
+    # Make x_train, x_val, and x_test from first frame of every gifs
+    # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
+    # X Shapes: (N, H, W, C)
+    # Y Shapes: (N,)
+    def generateXYSplitsV1(self):
+        if not self.data_loaded:
+            print("Error: load data first!")
+            return
+
+        largest = self.largest_image_size
+        x_train = np.zeros((self.x_train_inds.shape[0], largest[1], largest[2], largest[3]), dtype='uint8')
+        x_val   = np.zeros((self.x_val_inds.shape[0],   largest[1], largest[2], largest[3]), dtype='uint8')
+        x_test  = np.zeros((self.x_test_inds.shape[0],  largest[1], largest[2], largest[3]), dtype='uint8')
+
+        mats = (x_train, x_val, x_test)
+        inds = (self.x_train_inds, self.x_val_inds, self.x_test_inds)
+        for i in range(3):
+            for n in range(mats[i].shape[0]):
+                frame = self.all_gifs[inds[i][n]][0,:,:,:]
+                h_diff = largest[1] - frame.shape[0]
+                w_diff = largest[2] - frame.shape[1]
+                h0 = h_diff//2
+                h1 = h_diff//2 + h_diff%2
+                w0 = w_diff//2
+                w1 = w_diff//2 + w_diff%2
+                padded = np.pad(frame, ((h0,h1),(w0,w1),(0,0)), 'constant')  # Centered on transparent bkgd
+                mats[i][n,:,:,:] = padded
+
+        y_train = self.y_train
+        y_val   = self.y_val
+        y_test  = self.y_test
+
+        if self.verbose:
+            print("x_train:", x_train.shape)
+            print("x_val:  ", x_val.shape)
+            print("x_test: ", x_test.shape)
+            print("y_train:", y_train.shape)
+            print("y_val:  ", y_val.shape)
+            print("y_test: ", y_test.shape)
+
+        return (x_train, x_val, x_test, y_train, y_val, y_test)
 
 if __name__ == "__main__":
     utils = PokemonUtils()
