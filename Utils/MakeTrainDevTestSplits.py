@@ -14,9 +14,9 @@ if __name__ == "__main__":
     test_inds = inds[int(n*dev_percent):]
 
     train, val, test = (
-        utils.PrimaryTypesArray[train_inds,:],
-        utils.PrimaryTypesArray[val_inds,:],
-        utils.PrimaryTypesArray[test_inds,:])
+        np.concatenate((train_inds.reshape(-1,1), utils.PrimaryTypesArray[train_inds,:]), axis=1),
+        np.concatenate((val_inds.reshape(-1,1), utils.PrimaryTypesArray[val_inds,:]), axis=1),
+        np.concatenate((test_inds.reshape(-1,1), utils.PrimaryTypesArray[test_inds,:]), axis=1))
 
     print("train: " + str(train.shape[0]))
     print("dev:   " + str(val.shape[0]))
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     splits = (train, val, test)
     for i in range(3):
         fig, ax = plt.subplots()
-        ax.hist(splits[i][:,1], np.arange(20), rwidth=0.75)
+        ax.hist(splits[i][:,2], np.arange(20), rwidth=0.75)
         ax.set_xticks(np.arange(18)+1.5)
         ax.set_xticklabels(utils.type_names, rotation=45, rotation_mode="anchor", ha="right")
         plt.title = split_names[i] + " Distribution"
