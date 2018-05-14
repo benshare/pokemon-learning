@@ -13,17 +13,20 @@ PokemonUtils
 
 DATA:
 -----
-* utils.x_train, .x_val, .x_test
-(N x 1) arrays of pokedex numbers
+* utils.x_train_inds, .x_val_inds, .x_test_inds
+(N,) arrays of training indices (USE THESE MOSTLY)
+
+* utils.x_train_pokedex, .x_val_pokedex, .x_test_pokedex
+(N,) arrays of pokedex numbers (HELPFUL FOR SOME APPLICATIONS)
 
 * .y_train, .y_val, .y_test
-(N x 1) arrays of type numbers (1 = Normal, ..., 18 = Fairy)
+(N,) arrays of type numbers (1 = Normal, ..., 18 = Fairy)
 
 
 GIF MANIPULATION:
 -----------------
 * utils.readGif(path)
-gif path name --> numpy array (T x H x W x C)
+gif path name --> numpy array (T, H, W, C)
 
 
 LOOKUP TABLES:
@@ -134,12 +137,15 @@ class PokemonUtils():
             train = np.loadtxt(self.splits_path + "Train.txt", dtype=int)
             val   = np.loadtxt(self.splits_path + "Val.txt", dtype=int)
             test  = np.loadtxt(self.splits_path + "Test.txt", dtype=int)
-            self.x_train = train[:,0]
-            self.x_val   = val[:,0]
-            self.x_test  = test[:,0]
-            self.y_train = train[:,1]
-            self.y_val   = val[:,1]
-            self.y_test  = test[:,1]
+            self.x_train_inds = train[:,0]
+            self.x_val_inds   = val[:,0]
+            self.x_test_inds  = test[:,0]
+            self.x_train_pokedex = train[:,1]
+            self.x_val_pokedex   = val[:,1]
+            self.x_test_pokedex  = test[:,1]
+            self.y_train = train[:,2]
+            self.y_val   = val[:,2]
+            self.y_test  = test[:,2]
         except:
             print("Error: couldn't load train/val/test splits")
 
@@ -151,13 +157,13 @@ class PokemonUtils():
         isType = None
         if split == 'train':
             isType = self.y_train == type
-            sample = self.x_train[isType]
+            sample = self.x_train_pokedex[isType]
         elif split == 'val':
             isType = self.y_val == type
-            sample = self.x_val[isType]
+            sample = self.x_val_pokedex[isType]
         elif split == 'test':
             isType = self.y_test == type
-            sample = self.x_test[isType]
+            sample = self.x_test_pokedex[isType]
         else:
             isType = self.PrimaryTypesArray[:,1] == type
             sample = self.PrimaryTypesArray[isType,0]
@@ -190,10 +196,10 @@ class PokemonUtils():
 
         # Add quiz portion
         html += "<h2>Type Quiz</h2>"
-        indices = np.random.choice(np.arange(self.x_test.shape[0]), q, replace=False)
+        indices = np.random.choice(np.arange(self.x_test_pokedex.shape[0]), q, replace=False)
         for i in range(q):
             index = indices[i]
-            x = self.x_test[index]
+            x = self.x_test_pokedex[index]
             y = self.y_test[index]
             pkmn = self.numberToName(x)
             html += "<div style='margin-bottom:15px' id='question" + str(i) + "'>"
@@ -239,12 +245,15 @@ class PokemonUtils():
 
     # from https://stackoverflow.com/questions/50054187/convert-animated-gif-to-4d-array-in-python
     # GIF path name --> 4D numpy array
-    def readGif(self, path, format='RGBA'):
+    def readGif(self, name, folder="", format='RGBA'):
+        if folder == "":
+            folder = self.gifs_path
+
         channels = 4
         if format != 'RGBA':
             channels = 3
 
-        img = Image.open(path)
+        img = Image.open(folder + name + ".gif")
         gif = np.array([np.array(frame.copy().convert(format).getdata(),dtype=np.uint8).reshape(frame.size[1],frame.size[0],channels) for frame in ImageSequence.Iterator(img)])
         return gif
 
@@ -252,25 +261,25 @@ if __name__ == "__main__":
     utils = PokemonUtils()
 
     # Find distribution of data sizes
-    smallest = np.array([999,999,999,999])
-    largest  = np.array([-1,-1,-1,-1])
-    count = 1;
-    for name in utils.uniqueValidPokemonNames:
-        gif = utils.readGif("../Data/pkparaiso/" + name + ".gif")
-        cur = np.array([gif.shape[0], gif.shape[1], gif.shape[2], gif.shape[3]])
-        smallest = np.minimum(cur, smallest)
-        largest  = np.maximum(cur, largest)
-        if count % 50 == 0:
-            print(count, "done!")
-        count += 1
-    print("smallest:", smallest)
-    print("largest:", largest)
+    # smallest = np.array([999,999,999,999])
+    # largest  = np.array([-1,-1,-1,-1])
+    # count = 1;
+    # for name in utils.uniqueValidPokemonNames:
+    #     gif = utils.readGif("../Data/pkparaiso/" + name + ".gif")
+    #     cur = np.array([gif.shape[0], gif.shape[1], gif.shape[2], gif.shape[3]])
+    #     smallest = np.minimum(cur, smallest)
+    #     largest  = np.maximum(cur, largest)
+    #     if count % 50 == 0:
+    #         print(count, "done!")
+    #     count += 1
+    # print("smallest:", smallest)
+    # print("largest:", largest)
 
     # Check readGif functionality
-    # gif = utils.readGif("../Data/pkparaiso/araquanid.gif")
-    # for i in range(3):
-    #     plt.imshow(gif[i,:,:,:])
-    #     plt.show()
+    gif = utils.readGif("araquanid")
+    for i in range(3):
+        plt.imshow(gif[i,:,:,:])
+        plt.show()
 
     # Check flying-type distribution
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'train')))
@@ -278,4 +287,4 @@ if __name__ == "__main__":
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'test')))
 
     # Generate Type Quiz
-    # utils.generateTypeQuizHTML(k=10, q=20)
+    # utils.generateTypeQuizHTML(k=500, q=20)
