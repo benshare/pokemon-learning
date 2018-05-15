@@ -13,11 +13,17 @@ PokemonUtils
 
 DATA:
 -----
-* utils.generateXYSplitsV1()
+* utils.generateXYSplitsV1(H=128, W=128, C=4)
 Make x_train, x_val, and x_test from first frame of every gifs
 Returns (x_train, x_val, x_test, y_train, y_val, y_test)
   X Shapes: (N, H, W, C)
   Y Shapes: (N,)
+
+* utils.generateXYSplitsV2(K=10, H=128, W=128, C=4)
+Make x_train, x_val, and x_test from a randomly chosen K frames from every GIF
+Returns (x_train, x_val, x_test, y_train, y_val, y_test)
+  X Shapes: (N*K, H, W, C)
+  Y Shapes: (N*K,)
 
 * utils.x_train_inds, .x_val_inds, .x_test_inds
 (N,) arrays of training indices
@@ -291,8 +297,9 @@ class PokemonUtils():
         self.calculateGIFSizeExtremes()
         self.data_loaded = True
 
+    # Get largest and smallest value for each dimension
+    # (T, H, W, C)
     def calculateGIFSizeExtremes(self):
-        # Find distribution of data sizes
         self.smallest_image_size = np.array([999,999,999,999])
         self.largest_image_size  = np.array([-1,-1,-1,-1])
         for i in range(len(self.all_gifs)):
@@ -306,37 +313,98 @@ class PokemonUtils():
         print("smallest:", self.smallest_image_size)
         print("largest:", self.largest_image_size)
 
+    def fitImageToSize(self, im, h=128, w=128):
+        h_diff = h - im.shape[0]
+        w_diff = w - im.shape[1]
+
+        sizedH = None
+        sizedHW = None
+
+        # Height
+        if (h_diff >= 0):
+            h0 = h_diff//2
+            h1 = h_diff//2 + h_diff%2
+            sizedH = np.pad(im, ((h0,h1),(0,0),(0,0)), 'constant')  # Centered on transparent bkgd
+        else:
+            offset = np.random.randint(np.abs(h_diff))
+            sizedH = im[offset:h+offset, :, :]
+
+        # Width
+        if (w_diff >= 0):
+            w0 = w_diff//2
+            w1 = w_diff//2 + w_diff%2
+            sizedHW = np.pad(sizedH, ((0,0),(w0,w1),(0,0)), 'constant')  # Centered on transparent bkgd
+        else:
+            offset = np.random.randint(np.abs(w_diff))
+            sizedHW = sizedH[:, offset:w+offset, :]
+
+        return sizedHW
+
+
     # Make x_train, x_val, and x_test from first frame of every gifs
     # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
     # X Shapes: (N, H, W, C)
     # Y Shapes: (N,)
-    def generateXYSplitsV1(self):
+    def generateXYSplitsV1(self, H=128, W=128, C=4):
         if not self.data_loaded:
             print("Error: load data first!")
             return
 
-        largest = self.largest_image_size
-        x_train = np.zeros((self.x_train_inds.shape[0], largest[1], largest[2], largest[3]), dtype='uint8')
-        x_val   = np.zeros((self.x_val_inds.shape[0],   largest[1], largest[2], largest[3]), dtype='uint8')
-        x_test  = np.zeros((self.x_test_inds.shape[0],  largest[1], largest[2], largest[3]), dtype='uint8')
+        x_train = np.zeros((self.x_train_inds.shape[0], H, W, C), dtype='uint8')
+        x_val   = np.zeros((self.x_val_inds.shape[0],   H, W, C), dtype='uint8')
+        x_test  = np.zeros((self.x_test_inds.shape[0],  H, W, C), dtype='uint8')
 
         mats = (x_train, x_val, x_test)
         inds = (self.x_train_inds, self.x_val_inds, self.x_test_inds)
         for i in range(3):
             for n in range(mats[i].shape[0]):
                 frame = self.all_gifs[inds[i][n]][0,:,:,:]
-                h_diff = largest[1] - frame.shape[0]
-                w_diff = largest[2] - frame.shape[1]
-                h0 = h_diff//2
-                h1 = h_diff//2 + h_diff%2
-                w0 = w_diff//2
-                w1 = w_diff//2 + w_diff%2
-                padded = np.pad(frame, ((h0,h1),(w0,w1),(0,0)), 'constant')  # Centered on transparent bkgd
-                mats[i][n,:,:,:] = padded
+                mats[i][n,:,:,:] = self.fitImageToSize(frame, H, W)
 
         y_train = self.y_train
         y_val   = self.y_val
         y_test  = self.y_test
+
+        if self.verbose:
+            print("x_train:", x_train.shape)
+            print("x_val:  ", x_val.shape)
+            print("x_test: ", x_test.shape)
+            print("y_train:", y_train.shape)
+            print("y_val:  ", y_val.shape)
+            print("y_test: ", y_test.shape)
+
+        return (x_train, x_val, x_test, y_train, y_val, y_test)
+
+    # Make x_train, x_val, and x_test from a randomly chosen k frames from every GIF
+    # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
+    # X Shapes: (N*K, H, W, C)
+    # Y Shapes: (N*K,)
+    def generateXYSplitsV2(self, K=10, H=128, W=128, C=4):
+        if not self.data_loaded:
+            print("Error: load data first!")
+            return
+
+        assert(K <= self.smallest_image_size[0])  # Can't take more frames than the shortest GIF has
+
+        x_train = np.zeros((self.x_train_inds.shape[0]*K, H, W, C), dtype='uint8')
+        x_val   = np.zeros((self.x_val_inds.shape[0]*K,   H, W, C), dtype='uint8')
+        x_test  = np.zeros((self.x_test_inds.shape[0]*K,  H, W, C), dtype='uint8')
+
+        mats = (x_train, x_val, x_test)
+        inds = (self.x_train_inds, self.x_val_inds, self.x_test_inds)
+        for i in range(3):
+            for n in range(mats[i].shape[0]//K):
+                T = self.all_gifs[inds[i][n]].shape[0]
+                frames = np.random.choice(np.arange(T), K, replace=False)
+                framesAdded = 0
+                for k in frames:
+                    frame = self.all_gifs[inds[i][n]][k,:,:,:]
+                    mats[i][K*n+framesAdded,:,:,:] = self.fitImageToSize(frame, H, W)
+                    framesAdded += 1
+
+        y_train = np.repeat(self.y_train, K)
+        y_val   = np.repeat(self.y_val, K)
+        y_test  = np.repeat(self.y_test, K)
 
         if self.verbose:
             print("x_train:", x_train.shape)
