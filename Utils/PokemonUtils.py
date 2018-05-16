@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os.path  # File path checking
 from PIL import Image, ImageSequence  # Reading GIFs
-
+import os
 
 """
 PokemonUtils
@@ -68,10 +68,10 @@ List of names of all pokemon we will be using
 
 class PokemonUtils():
 
-    def __init__(self, verbose=True, utils=None):
-        self.csv_path = "../Data/veekun/"
-        self.gifs_path = "../Data/pkparaiso/"
-        self.splits_path = "../Data/Splits/"
+    def __init__(self, rel_loc="../", verbose=True, utils=None):
+        self.csv_path = rel_loc + "Data/veekun/"
+        self.gifs_path = rel_loc + "Data/pkparaiso/"
+        self.splits_path = rel_loc + "Data/Splits/"
         self.all_gifs = []
         self.verbose = verbose
 
