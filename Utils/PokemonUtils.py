@@ -143,6 +143,27 @@ class PokemonUtils():
         self.SecondaryTypesArray = np.array([[n, self.numberToSecondaryTypeDict[n]] for n in self.uniqueValidIDs])
 
     def generateTypeNames(self):
+        self.typeNameToColorDict = {
+            "normal":"#a8a77a",
+            "fighting":"#bf2f2b",
+            "poison":"#9e449e",
+            "ground":"#e9be6c",
+            "flying":"#a793ee",
+            "bug":"#a9b62f",
+            "rock":"#b89e3f",
+            "ghost":"#6f5a97",
+            "steel":"#b8b9cf",
+            "fire":"#ef7e37",
+            "water":"#6794ee",
+            "electric":"#f8ce3f",
+            "grass":"#7bc656",
+            "ice":"#99d8d8",
+            "psychic":"#f65988",
+            "dragon":"#6d47f5",
+            "dark":"#705849",
+            "fairy":"#feb9f9",
+        }
+
         self.type_names = []
         self.typeToNameDict = {}
         self.nameToTypeDict = {}
@@ -435,15 +456,45 @@ if __name__ == "__main__":
     # print("largest:", largest)
 
     # Check readGif functionality
-    gif = utils.readGif("araquanid")
-    for i in range(3):
-        plt.imshow(gif[i,:,:,:])
-        plt.show()
+    # gif = utils.readGif("araquanid")
+    # for i in range(3):
+    #     plt.imshow(gif[i,:,:,:])
+    #     plt.show()
 
     # Check flying-type distribution
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'train')))
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'val')))
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'test')))
+
+    # View sorted disstribution of types
+    # 1: sort data
+    data = np.bincount(utils.PrimaryTypesArray[:,1])[1:]
+    sorted_data = np.sort(data)
+    order = np.argsort(data)
+    sorted_labels = [utils.type_names[i].capitalize() for i in order]
+    label_colors = [utils.typeNameToColorDict[type.lower()] for type in sorted_labels]
+    # 2: generate bar graph
+    f, ax = plt.subplots()
+    ax.set_title("Distribution of Primary Types")
+    d = np.diff(np.unique(data)).min()
+    left_of_first_bin = data.min() - float(d)/2
+    right_of_last_bin = data.max() + float(d)/2
+    ax.bar(np.arange(18)+1, sorted_data, color=label_colors)
+    ax.set_xticks(np.arange(18)+1)
+    ax.set_xticklabels(sorted_labels, rotation=45, rotation_mode="anchor", ha="right")
+    plt.show()
+
+    # View disstribution of types
+    # f, ax = plt.subplots()
+    # ax.set_title("Distribution of Primary Types")
+    # data = utils.PrimaryTypesArray[:,1]
+    # d = np.diff(np.unique(data)).min()
+    # left_of_first_bin = data.min() - float(d)/2
+    # right_of_last_bin = data.max() + float(d)/2
+    # ax.hist(data, np.arange(left_of_first_bin, right_of_last_bin + d, d), rwidth=0.75)
+    # ax.set_xticks(np.arange(18)+1)
+    # ax.set_xticklabels(utils.type_names, rotation=45, rotation_mode="anchor", ha="right")
+    # plt.show()
 
     # Generate Type Quiz
     # utils.generateTypeQuizHTML(k=500, q=20)
