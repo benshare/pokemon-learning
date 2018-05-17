@@ -467,22 +467,22 @@ if __name__ == "__main__":
     # print(utils.numbersToName(utils.getTypeSample(utils.nameToType('flying'), 100, 'test')))
 
     # View sorted disstribution of types
-    # 1: sort data
-    data = np.bincount(utils.PrimaryTypesArray[:,1])[1:]
-    sorted_data = np.sort(data)
-    order = np.argsort(data)
-    sorted_labels = [utils.type_names[i].capitalize() for i in order]
-    label_colors = [utils.typeNameToColorDict[type.lower()] for type in sorted_labels]
-    # 2: generate bar graph
-    f, ax = plt.subplots()
-    ax.set_title("Distribution of Primary Types")
-    d = np.diff(np.unique(data)).min()
-    left_of_first_bin = data.min() - float(d)/2
-    right_of_last_bin = data.max() + float(d)/2
-    ax.bar(np.arange(18)+1, sorted_data, color=label_colors)
-    ax.set_xticks(np.arange(18)+1)
-    ax.set_xticklabels(sorted_labels, rotation=45, rotation_mode="anchor", ha="right")
-    plt.show()
+    # # 1: sort data
+    # data = np.bincount(utils.PrimaryTypesArray[:,1])[1:]
+    # sorted_data = np.sort(data)
+    # order = np.argsort(data)
+    # sorted_labels = [utils.type_names[i].capitalize() for i in order]
+    # label_colors = [utils.typeNameToColorDict[type.lower()] for type in sorted_labels]
+    # # 2: generate bar graph
+    # f, ax = plt.subplots()
+    # ax.set_title("Distribution of Primary Types")
+    # d = np.diff(np.unique(data)).min()
+    # left_of_first_bin = data.min() - float(d)/2
+    # right_of_last_bin = data.max() + float(d)/2
+    # ax.bar(np.arange(18)+1, sorted_data, color=label_colors)
+    # ax.set_xticks(np.arange(18)+1)
+    # ax.set_xticklabels(sorted_labels, rotation=45, rotation_mode="anchor", ha="right")
+    # plt.show()
 
     # View disstribution of types
     # f, ax = plt.subplots()
@@ -497,4 +497,4 @@ if __name__ == "__main__":
     # plt.show()
 
     # Generate Type Quiz
-    # utils.generateTypeQuizHTML(k=500, q=20)
+    utils.generateTypeQuizHTML(k=5, q=20)
