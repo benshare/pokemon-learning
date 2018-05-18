@@ -13,13 +13,16 @@ PokemonUtils
 
 DATA:
 -----
+* utils.localLoadAllGifs(filename)
+Loads train/val/test data from a .npz file generated from generateXYSplits or some variant
+
 * utils.generateXYSplitsV1(H=128, W=128, C=4)
 Make x_train, x_val, and x_test from first frame of every gifs
 Returns (x_train, x_val, x_test, y_train, y_val, y_test)
   X Shapes: (N, H, W, C)
   Y Shapes: (N,)
 
-* utils.generateXYSplitsV2(K=10, H=128, W=128, C=4)
+* utils.generateXYSplitsV2(K=10, H=128, W=128, C=4, outfile=None)
 Make x_train, x_val, and x_test from a randomly chosen K frames from every GIF
 Returns (x_train, x_val, x_test, y_train, y_val, y_test)
   X Shapes: (N*K, H, W, C)
@@ -69,6 +72,7 @@ List of names of all pokemon we will be using
 class PokemonUtils():
 
     def __init__(self, rel_loc="../", verbose=True, utils=None):
+        self.rel_loc = rel_loc
         self.csv_path = rel_loc + "Data/veekun/"
         self.gifs_path = rel_loc + "Data/pkparaiso/"
         self.splits_path = rel_loc + "Data/Splits/"
@@ -315,8 +319,19 @@ class PokemonUtils():
                 print(count, "done!")
             count += 1
         print("all", count-1, "done!")
-        self.calculateGIFSizeExtremes()
+        # self.calculateGIFSizeExtremes()
         self.data_loaded = True
+
+    def localLoadAllGifs(self, path):
+        files = np.load(self.rel_loc + path)
+        self.x_train = files['arr_0']
+        self.x_val   = files['arr_1']
+        self.x_test  = files['arr_2']
+        self.y_train = files['arr_3']
+        self.y_val   = files['arr_4']
+        self.y_test  = files['arr_5']
+
+        self.printSplitSizes()
 
     # Get largest and smallest value for each dimension
     # (T, H, W, C)
@@ -347,7 +362,7 @@ class PokemonUtils():
             h1 = h_diff//2 + h_diff%2
             sizedH = np.pad(im, ((h0,h1),(0,0),(0,0)), 'constant')  # Centered on transparent bkgd
         else:
-            offset = np.random.randint(np.abs(h_diff))
+            offset = np.abs(h_diff) // 2  #np.random.randint(np.abs(h_diff))
             sizedH = im[offset:h+offset, :, :]
 
         # Width
@@ -356,7 +371,7 @@ class PokemonUtils():
             w1 = w_diff//2 + w_diff%2
             sizedHW = np.pad(sizedH, ((0,0),(w0,w1),(0,0)), 'constant')  # Centered on transparent bkgd
         else:
-            offset = np.random.randint(np.abs(w_diff))
+            offset = np.abs(w_diff) // 2  #np.random.randint(np.abs(w_diff))
             sizedHW = sizedH[:, offset:w+offset, :]
 
         return sizedHW
@@ -386,21 +401,22 @@ class PokemonUtils():
         y_val   = self.y_val
         y_test  = self.y_test
 
-        if self.verbose:
-            print("x_train:", x_train.shape)
-            print("x_val:  ", x_val.shape)
-            print("x_test: ", x_test.shape)
-            print("y_train:", y_train.shape)
-            print("y_val:  ", y_val.shape)
-            print("y_test: ", y_test.shape)
+        self.printSplitSizes()
 
-        return (x_train, x_val, x_test, y_train, y_val, y_test)
+    def printSplitSizes(self):
+        if self.verbose:
+            print("x_train:", self.x_train.shape)
+            print("x_val:  ", self.x_val.shape)
+            print("x_test: ", self.x_test.shape)
+            print("y_train:", self.y_train.shape)
+            print("y_val:  ", self.y_val.shape)
+            print("y_test: ", self.y_test.shape)
 
     # Make x_train, x_val, and x_test from a randomly chosen k frames from every GIF
     # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
     # X Shapes: (N*K, H, W, C)
     # Y Shapes: (N*K,)
-    def generateXYSplitsV2(self, K=10, H=128, W=128, C=4):
+    def generateXYSplitsV2(self, K=10, H=128, W=128, C=4, outFile=None):
         if not self.data_loaded:
             print("Error: load data first!")
             return
@@ -434,6 +450,9 @@ class PokemonUtils():
             print("y_train:", y_train.shape)
             print("y_val:  ", y_val.shape)
             print("y_test: ", y_test.shape)
+
+        if not outFile is None:
+            np.savez(self.rel_loc + "Data/SplitsV2", x_train, x_val, x_test, y_train, y_val, y_test)
 
         return (x_train, x_val, x_test, y_train, y_val, y_test)
 
@@ -497,4 +516,4 @@ if __name__ == "__main__":
     # plt.show()
 
     # Generate Type Quiz
-    utils.generateTypeQuizHTML(k=5, q=20)
+    # utils.generateTypeQuizHTML(k=5, q=20)
