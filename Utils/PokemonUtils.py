@@ -454,7 +454,10 @@ class PokemonUtils():
         if not outFile is None:
             np.savez(self.rel_loc + "Data/SplitsV2", x_train, x_val, x_test, y_train, y_val, y_test)
 
-        return (x_train, x_val, x_test, y_train, y_val, y_test)
+        self.x_train, self.x_val, self.x_test, self.y_train, self.y_val, self.y_test = x_train, x_val, x_test, y_train, y_val, y_test
+        
+    def getSplits(self):
+        return (self.x_train, self.x_val, self.x_test, self.y_train, self.y_val, self.y_test)
 
 if __name__ == "__main__":
     utils = PokemonUtils()
