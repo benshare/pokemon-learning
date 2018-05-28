@@ -14,7 +14,7 @@ class ShallowNet():
     def tflearn_model(self):
         num_layers, image_width, filter_sizes, nums_of_filters, num_channels, num_classes = self.params
         
-        input_shape = (image_width, image_width, num_channels)
+        input_shape = (None, image_width, image_width, num_channels)
         
         if num_layers > len(filter_sizes):
             filter_sizes.extend([5 for i in range(num_layers - len(filter_sizes))])
@@ -24,16 +24,16 @@ class ShallowNet():
 
         img_aug = data_augmentation.ImageAugmentation()
         img_aug.add_random_flip_leftright()
-        img_aug.add_random_rotation()
+#         img_aug.add_random_rotation()
 #         img_aug.add_random_crop(input_shape, 12)
         
         net = input_data(shape=input_shape, data_augmentation=img_aug, name='input')
-#         for layer_num in range(num_layers):
-#             net = conv_2d(net, nums_of_filters[layer_num], filter_sizes[layer_num], activation='relu')
-#             net = max_pool_2d(net, 2, padding='valid')
-#         net = fully_connected(net, 64, activation='relu')
-#         net = fully_connected(net, num_classes)
-#         net = regression(net, optimizer='adam', learning_rate=0.01, loss='categorical_crossentropy', name='target')
+        for layer_num in range(num_layers):
+            net = conv_2d(net, nums_of_filters[layer_num], filter_sizes[layer_num], activation='relu', name=('convl%d' %num_layers))
+            net = max_pool_2d(net, 2, padding='valid')
+        net = fully_connected(net, 64, activation='relu', name='fc1')
+        net = fully_connected(net, num_classes, name='fc2')
+        net = regression(net, optimizer='adam', learning_rate=0.01, loss='categorical_crossentropy', name='target')
         return net
     
     def model_init_fn(self, inputs, DEBUG=False, beta=0.0):
