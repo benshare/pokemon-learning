@@ -378,7 +378,6 @@ class PokemonUtils():
 
 
     # Make x_train, x_val, and x_test from first frame of every gifs
-    # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
     # X Shapes: (N, H, W, C)
     # Y Shapes: (N,)
     def generateXYSplitsV1(self, H=128, W=128, C=4):
@@ -413,7 +412,6 @@ class PokemonUtils():
             print("y_test: ", self.y_test.shape)
 
     # Make x_train, x_val, and x_test from a randomly chosen k frames from every GIF
-    # Returns (x_train, x_val, x_test, y_train, y_val, y_test)
     # X Shapes: (N*K, H, W, C)
     # Y Shapes: (N*K,)
     def generateXYSplitsV2(self, K=10, H=128, W=128, C=4, outFile=None):
@@ -421,6 +419,7 @@ class PokemonUtils():
             print("Error: load data first!")
             return
 
+        self.calculateGIFSizeExtremes()
         assert(K <= self.smallest_image_size[0])  # Can't take more frames than the shortest GIF has
 
         x_train = np.zeros((self.x_train_inds.shape[0]*K, H, W, C), dtype='uint8')
@@ -455,6 +454,30 @@ class PokemonUtils():
             np.savez(self.rel_loc + "Data/SplitsV2", x_train, x_val, x_test, y_train, y_val, y_test)
 
         self.x_train, self.x_val, self.x_test, self.y_train, self.y_val, self.y_test = x_train, x_val, x_test, y_train, y_val, y_test
+        
+    # Make y_train_2, y_val_2, and y_test_2
+    # Y Shapes: (N*K,)
+    def getSecondaryTypeLabels(self, K=10, outFile=None):
+        mats = [None] * 3
+        inds = (self.x_train_inds, self.x_val_inds, self.x_test_inds)
+        for i in range(3):
+            mats[i] = self.SecondaryTypesArray[:,1][inds[i]]
+            
+        y_train_2 = np.repeat(mats[0], K)
+        y_val_2   = np.repeat(mats[1], K)
+        y_test_2  = np.repeat(mats[2], K)
+
+        if not outFile is None:
+            np.savez(self.rel_loc + "Data/SecondaryTypeLabels", y_train_2, y_val_2, y_test_2)
+            
+        if self.verbose:
+            print("y_train_2:", y_train_2.shape)
+            print("y_val_2:  ", y_val_2.shape)
+            print("y_test_2: ", y_test_2.shape)
+
+        self.y_train_2, self.y_val_2, self.y_test_2 = y_train_2, y_val_2, y_test_2
+        return (y_train_2, y_val_2, y_test_2)
+                
         
     def getSplits(self):
         return (self.x_train, self.x_val, self.x_test, self.y_train, self.y_val, self.y_test)
