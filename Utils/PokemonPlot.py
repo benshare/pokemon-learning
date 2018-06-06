@@ -2,7 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 <<<<<<< HEAD
+<<<<<<< HEAD
 from matplotlib import ticker
+=======
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 =======
 >>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 
@@ -79,7 +82,11 @@ def plotSprite(f, ax, x, y1, y2=None):
     ax.imshow(x)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def plotPredictions(x, y, scores, y2=None, k=5):
+=======
+def plotPredictions(x, y, predictions, y2=None, k=5):
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 =======
 def plotPredictions(x, y, predictions, y2=None, k=5):
 >>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
@@ -93,7 +100,11 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
         plotSprite(f, ax0, x[i], y[i], y2=y2[i])
                               
 <<<<<<< HEAD
+<<<<<<< HEAD
         top_types_inds = np.argsort(scores[i])[::-1][:k]
+=======
+        top_types_inds = np.argsort(predictions[i])[::-1][:k]
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 =======
         top_types_inds = np.argsort(predictions[i])[::-1][:k]
 >>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
@@ -104,6 +115,7 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
         ax1.yaxis.set_ticks(inds)
         ax1.set_yticklabels(labels)
         ax1.set_xlim((0,1))
+<<<<<<< HEAD
 <<<<<<< HEAD
         ax1.barh(inds[::-1], scores[i][top_types_inds], color=[numToColor(n) for n in top_types])
                               
@@ -149,6 +161,10 @@ def plotAccuracyAndLoss(h):
     plt.show()
     
     
+=======
+        ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
+                              
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 =======
         ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
                               
