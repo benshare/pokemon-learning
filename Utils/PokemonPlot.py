@@ -1,13 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-<<<<<<< HEAD
-<<<<<<< HEAD
 from matplotlib import ticker
-=======
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
-=======
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 
 typeNameToColorDict = {
     "normal":"#a8a77a",
@@ -58,7 +52,9 @@ def plotSprite(f, ax, x, y1, y2=None):
 #     ax.set_title(typeNumberToNameDict[y1].capitalize(), color=numToColor(y1), fontweight='bold')
     r, c, _ = x.shape
     buf = 5
-    if y2 is None or y2 <= 0:
+    if y1 < 0:
+        pass  # No title (y1 should be greater than 0
+    elif y2 is None or y2 <= 0:
         ax.text(c/2, 0-buf, typeNumberToNameDict[y1].capitalize(), fontweight='bold', 
                 ha="center", va="bottom", size="large",color=numToColor(y1))
     else:
@@ -81,15 +77,11 @@ def plotSprite(f, ax, x, y1, y2=None):
     ax.get_yaxis().set_visible(False)
     ax.imshow(x)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 def plotPredictions(x, y, scores, y2=None, k=5):
-=======
-def plotPredictions(x, y, predictions, y2=None, k=5):
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
-=======
-def plotPredictions(x, y, predictions, y2=None, k=5):
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
+    if y is None:
+        y = np.ones(len(x)) * -1
+    if y2 is None:
+        y2 = np.ones_like(y) * -1
     N = x.shape[0]
     for i in range(N):
         f = plt.figure(figsize=(9,2.5))
@@ -99,15 +91,7 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
     
         plotSprite(f, ax0, x[i], y[i], y2=y2[i])
                               
-<<<<<<< HEAD
-<<<<<<< HEAD
         top_types_inds = np.argsort(scores[i])[::-1][:k]
-=======
-        top_types_inds = np.argsort(predictions[i])[::-1][:k]
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
-=======
-        top_types_inds = np.argsort(predictions[i])[::-1][:k]
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
         top_types = top_types_inds + 1
         inds = np.arange(k)
         labels = [typeNumberToNameDict[n].capitalize() for n in top_types]
@@ -115,8 +99,6 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
         ax1.yaxis.set_ticks(inds)
         ax1.set_yticklabels(labels)
         ax1.set_xlim((0,1))
-<<<<<<< HEAD
-<<<<<<< HEAD
         ax1.barh(inds[::-1], scores[i][top_types_inds], color=[numToColor(n) for n in top_types])
                               
 def plotConfusionMatrix(mat, title, stats={}):
@@ -161,11 +143,3 @@ def plotAccuracyAndLoss(h):
     plt.show()
     
     
-=======
-        ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
-                              
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
-=======
-        ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
-                              
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777

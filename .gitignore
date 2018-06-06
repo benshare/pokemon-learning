@@ -105,11 +105,5 @@ venv.bak/
 
 # numpy cache
 *.npz
-<<<<<<< HEAD
-<<<<<<< HEAD
 *.h5
 *.hdf5
-=======
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
-=======
->>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
