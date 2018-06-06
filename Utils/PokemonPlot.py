@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+<<<<<<< HEAD
 from matplotlib import ticker
+=======
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
 
 typeNameToColorDict = {
     "normal":"#a8a77a",
@@ -75,7 +78,11 @@ def plotSprite(f, ax, x, y1, y2=None):
     ax.get_yaxis().set_visible(False)
     ax.imshow(x)
 
+<<<<<<< HEAD
 def plotPredictions(x, y, scores, y2=None, k=5):
+=======
+def plotPredictions(x, y, predictions, y2=None, k=5):
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
     N = x.shape[0]
     for i in range(N):
         f = plt.figure(figsize=(9,2.5))
@@ -85,7 +92,11 @@ def plotPredictions(x, y, scores, y2=None, k=5):
     
         plotSprite(f, ax0, x[i], y[i], y2=y2[i])
                               
+<<<<<<< HEAD
         top_types_inds = np.argsort(scores[i])[::-1][:k]
+=======
+        top_types_inds = np.argsort(predictions[i])[::-1][:k]
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
         top_types = top_types_inds + 1
         inds = np.arange(k)
         labels = [typeNumberToNameDict[n].capitalize() for n in top_types]
@@ -93,6 +104,7 @@ def plotPredictions(x, y, scores, y2=None, k=5):
         ax1.yaxis.set_ticks(inds)
         ax1.set_yticklabels(labels)
         ax1.set_xlim((0,1))
+<<<<<<< HEAD
         ax1.barh(inds[::-1], scores[i][top_types_inds], color=[numToColor(n) for n in top_types])
                               
 def plotConfusionMatrix(mat, title, stats={}):
@@ -137,3 +149,7 @@ def plotAccuracyAndLoss(h):
     plt.show()
     
     
+=======
+        ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
+                              
+>>>>>>> fac0ccaccbfffa9210f7d4cab6124a8119032777
