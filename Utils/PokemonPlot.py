@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib import ticker
 
 typeNameToColorDict = {
     "normal":"#a8a77a",
@@ -74,7 +75,7 @@ def plotSprite(f, ax, x, y1, y2=None):
     ax.get_yaxis().set_visible(False)
     ax.imshow(x)
 
-def plotPredictions(x, y, predictions, y2=None, k=5):
+def plotPredictions(x, y, scores, y2=None, k=5):
     N = x.shape[0]
     for i in range(N):
         f = plt.figure(figsize=(9,2.5))
@@ -84,7 +85,7 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
     
         plotSprite(f, ax0, x[i], y[i], y2=y2[i])
                               
-        top_types_inds = np.argsort(predictions[i])[::-1][:k]
+        top_types_inds = np.argsort(scores[i])[::-1][:k]
         top_types = top_types_inds + 1
         inds = np.arange(k)
         labels = [typeNumberToNameDict[n].capitalize() for n in top_types]
@@ -92,5 +93,47 @@ def plotPredictions(x, y, predictions, y2=None, k=5):
         ax1.yaxis.set_ticks(inds)
         ax1.set_yticklabels(labels)
         ax1.set_xlim((0,1))
-        ax1.barh(inds[::-1], predictions[i][top_types_inds], color=[numToColor(n) for n in top_types])
+        ax1.barh(inds[::-1], scores[i][top_types_inds], color=[numToColor(n) for n in top_types])
                               
+def plotConfusionMatrix(mat, title, stats={}):
+    f = plt.figure(figsize=(6,6))
+    ax = f.add_subplot(111)
+    labels = [typeNumberToNameDict[n].capitalize() for n in range(1,19)]
+    labels.insert(0,"[blank]")
+    
+    statsString = ""
+    for key in stats.keys():
+        statsString += key + "=" + str(stats[key]) + ", "
+    if len(statsString) > 1:
+        statsString = statsString[:-2]
+
+    cax = ax.matshow(mat)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_yticklabels(labels)
+    ax.xaxis.set_label_position('top')
+    ax.set_xlabel(title + " Confusion Matrix (n=" + str(int(np.sum(mat))) + ")\n\nActual", fontsize=14)
+    ax.set_ylabel("Predicted", fontsize=14)
+    f.colorbar(cax)
+    
+def plotAccuracyAndLoss(h):
+    # summarize history for accuracy
+    plt.plot(h['acc'])
+    plt.plot(h['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+
+    # summarize history for loss
+    plt.plot(h['loss'])
+    plt.plot(h['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+    
+    
